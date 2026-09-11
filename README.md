@@ -30,7 +30,16 @@ docker compose up
 
 ## Setup
 
-Ok, I lied. You have to do more than just three commands to set up the repo -- but only on the first time you set up the server! See [Setup/SCP](SETUP.md#on-the-server) for more details on this setup. It involves installing docker and scp'ing our SOPS key to the server so we can decrypt all the secrets of the repositories. If this is the first time you're setting up the entire repo however, you'll need to read the full setup doc.
+Depending on the state of the repository, there are different steps you must follow:
+
+- The infrastructure was already running but you need to restart the runner
+    - Make sure you run `git pull origin` before restarting the compose again
+        - While the runner updates services in place, it does not update the original code that was cloned
+        - Meaning if you want to run the latest version, you need to pull again
+- You have all the secrets made you just need to run the infrastructure on a new server
+    - Follow the steps in [Setup/On The Server](SETUP.md#on-the-server)
+- You lost the `age` key or are starting from scratch with the repo
+    - Follow the whole [setup guide](SETUP.md) to create and configure everything
 
 ## SOPS
 
