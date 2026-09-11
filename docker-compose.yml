@@ -1,0 +1,74 @@
+networks:
+  infra:
+    name: infra
+
+volumes:
+  runner_data:
+  registry_data:
+  vaultwarden_data:
+  db_data:
+  cyberham_data:
+
+services:
+  bootstrap:
+    build:
+      context: sops
+    image: sops:local
+    restart: "no"
+    profiles:
+      - "bootstrap"
+    volumes:
+      - ./sops/age.key:/age.key:ro
+      - ./secrets.enc:/work/secrets.enc:ro
+      - ./secrets:/work/secrets
+    command: ["/usr/local/bin/decrypt.sh", "secrets.enc", "secrets"]
+
+  runner:
+    build:
+      context: runner
+    image: runner:local
+    container_name: github-runner
+    restart: unless-stopped
+    env_file:
+      - secrets/runner/.env
+    environment:
+      - SOPS_DIR=${PWD}/sops
+    security_opt:
+      - label=disable
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/runner:/tmp/runner
+      - runner_data:/runner/data
+      - ./secrets/runner/config.json:/runner/data/.docker/config.json:ro
+      - ${PWD}/sops:${PWD}/sops
+    networks:
+      - infra
+
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: unless-stopped
+    env_file:
+      - secrets/registry/.env
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - registry_data:/var/lib/registry
+      - ./secrets/registry/.htpasswd:/auth/htpasswd:ro
+    networks:
+      - infra
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/confs:/etc/nginx/sites-enabled:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - ./secrets/nginx:/etc/ssl/cybr.club:ro
+    networks:
+      - infra
