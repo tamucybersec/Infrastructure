@@ -7,7 +7,8 @@ volumes:
   registry_data:
   vaultwarden_data:
   db_data:
-  cyberham_data:
+  decrypted_secrets:
+    name: decrypted_secrets
 
 services:
   bootstrap:
@@ -41,6 +42,7 @@ services:
       - runner_data:/runner/data
       - ./secrets/runner/config.json:/runner/data/.docker/config.json:ro
       - ${PWD}/sops:${PWD}/sops
+      - decrypted_secrets:/decrypted_secrets
     networks:
       - infra
 

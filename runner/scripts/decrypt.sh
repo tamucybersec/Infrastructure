@@ -1,15 +1,21 @@
 #!/bin/sh
 set -eu
 
-# Usage: decrypt
-# Call in CI to decrypt secrets during the build process
+# Usage: decrypt.sh <name?>
+# Decrypt secrets during CI
 
 src="$GITHUB_WORKSPACE/secrets.enc"
-dest="$GITHUB_WORKSPACE/secrets"
 
-mkdir -p "$dest"
+if [ $# -ge 1 ]; then
+  vol="decrypted_secrets"
+  dst="secrets/$1"
+else
+  vol="$GITHUB_WORKSPACE/secrets"
+  dst="secrets"
+fi
 
+mkdir -p "$vol"
 docker compose -f "$SOPS_DIR/docker-compose.yml" run --rm \
   -v "$src":/work/secrets.enc:ro \
-  -v "$dest":/work/secrets \
-  sops /usr/local/bin/decrypt.sh secrets.enc secrets
+  -v "$vol":/work/secrets \
+  sops /usr/local/bin/decrypt.sh secrets.enc "$dst"
