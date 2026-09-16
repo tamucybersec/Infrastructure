@@ -20,8 +20,6 @@ A large majority of the setup will be done locally by both creating and preparin
     - Go to org settings > developer settings > GitHub apps
     - New GitHub app
     - Give it a name and website, disable webhooks, and enable the organization permission "Self-hosted runners" as read/write
-    - (Already redirected to correct page by also available at) org settings > GitHub apps > configure > app settings
-    - Configure the app to only operate on specific repos
     - Copy the app id and download a private key
     - Go to org settings > actions > runner groups
     - Create a runner group and restrict access to certain repos then allow access to public repos
