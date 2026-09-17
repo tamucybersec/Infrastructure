@@ -1,6 +1,3 @@
 secrets
 secrets.bak
 sops/age.key
-
-GUIDE.md
-example.yml

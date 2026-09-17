@@ -5,8 +5,10 @@ This repo adheres to the [infrastructure as code](https://en.wikipedia.org/wiki/
 ```bash
 git clone https://github.com/tamucybersec/Infrastructure
 scripts/decrypt.sh .
-docker compose up
+scripts/compose.sh up
 ```
+
+> **Always** run `compose up` from the root of the repo. We use several tricks revolving around the root of the repo to allow for the infrastructure to in-place update itself.
 
 ## Overview
 
@@ -59,14 +61,17 @@ Essentially, we use a key to encrypt secrets and keep them directly in the repos
 - Some wiki or docs platform
     - Should include both public & private pages
     - Should be available for all officers and committees
-	- Maybe docusaurus?
+    - Maybe docusaurus?
 - Backup program
-	- Since we have SOPS, we can make encrypted backups to any provider
-		- GCP buckets are like $6 a TB so probably only pennies for us
-	- This is essential for resiliency
+    - Since we have SOPS, we can make encrypted backups to any provider
+        - GCP buckets are like $6 a TB so probably only pennies for us
+    - This is essential for resiliency
 - Pin image versions and set up alerting system
-	- To prevent unforseen breakages, pin the image version
-	- Will need some alert system for upgrading when vulnerabilities are found
+    - To prevent unforseen breakages, pin the image version
+    - Will need some alert system for upgrading when vulnerabilities are found
+- Self-repairing infrastructure
+    - Create intelligent CI workflows to deploy only the service that got updated
+    - Run specific tests for the containers including vuln scanning before deployment
 - Cloudflare [Terraform](https://github.com/hashicorp/terraform) management
     - [`cloudflared`](https://github.com/cloudflare/cloudflared)?
 

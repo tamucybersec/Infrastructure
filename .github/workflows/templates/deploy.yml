@@ -1,0 +1,54 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        description: "Service name to deploy"
+        required: true
+        type: string
+
+env:
+  SERVICE: ${{ inputs.service }}
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    concurrency:
+      group: deploy-$SERVICE
+      cancel-in-progress: false
+
+    steps:
+      - name: Validate service
+        run: |
+          set -euo pipefail
+          if [ "$SERVICE" = "runner" ]; then
+            echo "::error::The runner cannot redeploy itself"
+            exit 1
+          fi
+
+      - name: Pull repo
+        run: |
+          set -euo pipefail
+          git fetch --prune origin
+          git reset --hard "$GITHUB_SHA"
+          git clean -fd
+
+      - name: Decrypt secrets
+        run: decrypt $INFRA_DIR
+
+      - name: Validate compose
+        run: scripts/compose.sh config -q
+
+      - name: Test $SERVICE
+        run: |
+          set -euo pipefail
+          if [ -x "tests/$SERVICE.sh" ]; then
+            "tests/$SERVICE.sh"
+          fi
+
+      - name: Deploy $SERVICE
+        run: |
+          set -euo pipefail
+          scripts/compose.sh pull $SERVICE
+          scripts/compose.sh up -d $SERVICE

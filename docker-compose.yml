@@ -1,3 +1,5 @@
+name: infrastructure
+
 networks:
   infra:
     name: infra
@@ -20,7 +22,8 @@ services:
     env_file:
       - secrets/runner/.env
     environment:
-      - SOPS_DIR=${PWD}/sops
+      - INFRA_DIR=${INFRA_DIR:?run compose.sh, not compose directly}
+      - SOPS_DIR=${SOPS_DIR:?run compose.sh, not compose directly}
     security_opt:
       - label=disable
     volumes:
@@ -28,8 +31,8 @@ services:
       - /tmp/runner:/tmp/runner
       - runner_data:/runner/data
       - ./secrets/runner/config.json:/runner/data/.docker/config.json:ro
-      - ${PWD}/sops:${PWD}/sops
       - decrypted_secrets:/decrypted_secrets
+      - ${INFRA_DIR}:${INFRA_DIR}
     networks:
       - infra
 
@@ -59,5 +62,27 @@ services:
       - ./nginx/confs:/etc/nginx/sites-enabled:ro
       - ./nginx/snippets:/etc/nginx/snippets:ro
       - ./secrets/nginx:/etc/ssl/cybr.club:ro
+    networks:
+      - infra
+
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: unless-stopped
+    env_file:
+      - secrets/postgres/.env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - infra
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    env_file:
+      - "secrets/vaultwarden/.env"
+    volumes:
+      - vaultwarden_data:/data
     networks:
       - infra
