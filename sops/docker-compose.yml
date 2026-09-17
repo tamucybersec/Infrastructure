@@ -2,6 +2,9 @@ services:
   sops:
     build: .
     image: sops:local
+    user: "${SOPS_USER:-root}"
+    environment:
+      - HOME=/tmp
     volumes:
       - ${SOPS_DIR}/age.pub:/age.pub:ro
       - ${SOPS_DIR}/age.key:/age.key:ro

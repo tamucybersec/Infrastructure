@@ -11,19 +11,6 @@ volumes:
     name: decrypted_secrets
 
 services:
-  bootstrap:
-    build:
-      context: sops
-    image: sops:local
-    restart: "no"
-    profiles:
-      - "bootstrap"
-    volumes:
-      - ./sops/age.key:/age.key:ro
-      - ./secrets.enc:/work/secrets.enc:ro
-      - ./secrets:/work/secrets
-    command: ["/usr/local/bin/decrypt.sh", "secrets.enc", "secrets"]
-
   runner:
     build:
       context: runner

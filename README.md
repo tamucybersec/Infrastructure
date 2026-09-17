@@ -4,7 +4,7 @@ This repo adheres to the [infrastructure as code](https://en.wikipedia.org/wiki/
 
 ```bash
 git clone https://github.com/tamucybersec/Infrastructure
-docker compose run --rm bootstrap
+scripts/decrypt.sh .
 docker compose up
 ```
 
@@ -33,7 +33,7 @@ docker compose up
 Depending on the state of the repository, there are different steps you must follow:
 
 - The infrastructure was already running but you need to restart the runner
-    - Make sure you run `git pull origin` before restarting the compose again
+    - Make sure you run `git pull origin` before decrypting and restarting the compose again
         - While the runner updates services in place, it does not update the original code that was cloned
         - Meaning if you want to run the latest version, you need to pull again
 - You have all the secrets made you just need to run the infrastructure on a new server
@@ -59,6 +59,14 @@ Essentially, we use a key to encrypt secrets and keep them directly in the repos
 - Some wiki or docs platform
     - Should include both public & private pages
     - Should be available for all officers and committees
+	- Maybe docusaurus?
+- Backup program
+	- Since we have SOPS, we can make encrypted backups to any provider
+		- GCP buckets are like $6 a TB so probably only pennies for us
+	- This is essential for resiliency
+- Pin image versions and set up alerting system
+	- To prevent unforseen breakages, pin the image version
+	- Will need some alert system for upgrading when vulnerabilities are found
 - Cloudflare [Terraform](https://github.com/hashicorp/terraform) management
     - [`cloudflared`](https://github.com/cloudflare/cloudflared)?
 

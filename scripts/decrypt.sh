@@ -12,7 +12,9 @@ src="$dir/secrets.enc"
 dest="$dir/secrets"
 mkdir -p "$dest"
 
-sudo SOPS_DIR="$SOPS_DIR" \
+sudo \
+  SOPS_DIR="$SOPS_DIR" \
+  SOPS_USER="$(id -u):$(id -g)" \
   docker compose -f "$SOPS_DIR/docker-compose.yml" run --rm \
   -v "$src":/work/secrets.enc:ro \
   -v "$dest":/work/secrets \

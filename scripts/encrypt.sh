@@ -12,8 +12,10 @@ src="$dir/secrets"
 dest="$dir/secrets.enc"
 mkdir -p "$dest"
 
-sudo SOPS_DIR="$SOPS_DIR" \
-  docker compose -f "$SOPS_DIR/docker-compose.yml" run --rm \
+sudo \
+  SOPS_DIR="$SOPS_DIR" \
+  SOPS_USER="$(id -u):$(id -g)" \
+  docker compose -f "$SOPS_DIR/docker-compose.yml" run --rm --build \
   -v "$src":/work/secrets:ro \
   -v "$dest":/work/secrets.enc \
   sops /usr/local/bin/encrypt.sh secrets secrets.enc

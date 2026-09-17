@@ -17,6 +17,12 @@ find "$src" -type f | while read -r f; do
   esac
   outdir="$dest/$dir"
   [ "$dir" = "." ] && outdir="$dest"
+  out="$outdir/$outname"
+
+  if [ -f "$out" ] && sops -d "$out" 2>/dev/null | cmp -s - "$f"; then
+    continue
+  fi
+
   mkdir -p "$outdir"
-  sops --age "$(cat /age.pub)" -e "$f" > "$outdir/$outname"
+  sops --age "$(cat /age.pub)" -e "$f" > "$out"
 done
