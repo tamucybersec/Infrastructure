@@ -22,11 +22,11 @@ connectors:
       clientID: $GITHUB_CLIENT_ID
       clientSecret: $GITHUB_CLIENT_SECRET
       redirectURI: https://auth.cybr.club/dex/callback
-    orgs:
-      - name: tamucybersec
-        loadAllGroups: false
-        teamNameField: slug
-        useLoginAsID: false
+      orgs:
+        - name: tamucybersec
+      loadAllGroups: false
+      teamNameField: slug
+      useLoginAsID: false
 
 staticClients:
   - id: outline
