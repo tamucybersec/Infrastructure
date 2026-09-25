@@ -7,6 +7,9 @@ set -eu
 #   against the real state without locking, applying, or migrating.
 mode="${TF_MODE:-apply}"
 
+# Plain output in plan mode: it gets pasted into PR comments, not a terminal.
+[ "$mode" = plan ] && export TF_CLI_ARGS="-no-color"
+
 # State backend: base postgres database, one schema per stack.
 export PGPASSWORD="$POSTGRES_PASSWORD"
 export PG_CONN_STR="host=${PG_HOST:-postgres} user=$POSTGRES_USER dbname=$POSTGRES_DB sslmode=disable"
