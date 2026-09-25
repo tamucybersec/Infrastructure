@@ -6,16 +6,15 @@ set -eu
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 export SOPS_DIR="$(cd "$script_dir/../sops" && pwd)"
+export SOPS_USER="$(id -u):$(id -g)"
 
 dir="$(cd "$1" && pwd)"
 src="$dir/secrets"
 dest="$dir/secrets.enc"
 mkdir -p "$dest"
 
-sudo \
-  SOPS_DIR="$SOPS_DIR" \
-  SOPS_USER="$(id -u):$(id -g)" \
-  docker compose -f "$SOPS_DIR/docker-compose.yml" run --rm --build \
+docker compose \
+  -f "$SOPS_DIR/docker-compose.yml" run --rm --build \
   -v "$src":/work/secrets:ro \
   -v "$dest":/work/secrets.enc \
   sops /usr/local/bin/encrypt.sh secrets secrets.enc

@@ -9,10 +9,111 @@ volumes:
   registry_data:
   vaultwarden_data:
   db_data:
+  dex_data:
   decrypted_secrets:
     name: decrypted_secrets
 
 services:
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: unless-stopped
+    env_file:
+      - secrets/registry/.env
+    ports:
+      - 127.0.0.1:5000:5000
+    volumes:
+      - registry_data:/var/lib/registry
+      - ./secrets/registry/.htpasswd:/auth/htpasswd:ro
+    networks:
+      - infra
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/v2/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/confs:/etc/nginx/sites-enabled:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - ./secrets/nginx:/etc/ssl/cybr.club:ro
+    networks:
+      - infra
+
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: unless-stopped
+    env_file:
+      - secrets/postgres/.env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - infra
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "outline", "-U", "user"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  redis:
+    image: redis:8
+    container_name: redis
+    restart: unless-stopped
+    env_file:
+      - secrets/redis/.env
+    networks:
+      - infra
+    command: sh -c 'redis-server --requirepass "$$REDIS_PASSWORD"'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+  dex:
+    image: dexidp/dex:latest
+    container_name: dex
+    restart: unless-stopped
+    env_file:
+      - secrets/dex/.env
+    volumes:
+      - dex_data:/data
+      - ./dex/config.yml:/etc/dex/config.yml:ro
+    networks:
+      - infra
+    command: ["dex", "serve", "/etc/dex/config.yml"]
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    volumes:
+      - vaultwarden_data:/data
+    networks:
+      - infra
+
+  outline:
+    image: outlinewiki/outline:latest
+    container_name: outline
+    restart: unless-stopped
+    env_file:
+      - secrets/outline/.env
+    networks:
+      - infra
+    depends_on:
+      - postgres
+      - redis
+
   runner:
     build:
       context: runner
@@ -35,54 +136,6 @@ services:
       - ${INFRA_DIR}:${INFRA_DIR}
     networks:
       - infra
-
-  registry:
-    image: registry:2
-    container_name: registry
-    restart: unless-stopped
-    env_file:
-      - secrets/registry/.env
-    ports:
-      - "127.0.0.1:5000:5000"
-    volumes:
-      - registry_data:/var/lib/registry
-      - ./secrets/registry/.htpasswd:/auth/htpasswd:ro
-    networks:
-      - infra
-
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/confs:/etc/nginx/sites-enabled:ro
-      - ./nginx/snippets:/etc/nginx/snippets:ro
-      - ./secrets/nginx:/etc/ssl/cybr.club:ro
-    networks:
-      - infra
-
-  postgres:
-    image: postgres:17
-    container_name: postgres
-    restart: unless-stopped
-    env_file:
-      - secrets/postgres/.env
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    networks:
-      - infra
-
-  vaultwarden:
-    image: vaultwarden/server:latest
-    container_name: vaultwarden
-    restart: unless-stopped
-    env_file:
-      - "secrets/vaultwarden/.env"
-    volumes:
-      - vaultwarden_data:/data
-    networks:
-      - infra
+    depends_on:
+      - registry
+      - postgres

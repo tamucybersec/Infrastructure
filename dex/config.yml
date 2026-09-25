@@ -1,0 +1,30 @@
+issuer: https://auth.cybr.club/dex
+
+storage:
+  type: sqlite3
+  config:
+    file: /data/dex.db
+
+web:
+  http: 0.0.0.0:5556
+
+connectors:
+  - type: github
+    id: github
+    name: GitHub
+    config:
+      clientID: $GITHUB_CLIENT_ID
+      clientSecret: $GITHUB_CLIENT_SECRET
+      redirectURI: https://auth.cybr.club/dex/callback
+    orgs:
+      - name: tamucybersec
+        loadAllGroups: false
+        teamNameField: slug
+        useLoginAsID: false
+
+staticClients:
+  - id: outline
+    name: Outline
+    secretEnv: OUTLINE_CLIENT_SECRET
+    redirectURIs:
+      - https://wiki.cybr.club/auth/oidc.callback

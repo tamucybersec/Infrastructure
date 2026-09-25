@@ -22,6 +22,10 @@ scripts/compose.sh up
     - Powerful FOSS relational database
 - [VaultWarden](https://github.com/dani-garcia/vaultwarden)
     - Hosts passwords for simple secret sharing among the team
+- [Outline](https://github.com/outline/outline)
+    - Collaborative wiki documentation hub
+- [Dex](https://github.com/dexidp/dex)
+	- Simple OIDC auth platform
 - [SOPS](https://github.com/getsops/sops) with [age](https://github.com/FiloSottile/age)
     - Encrypts / decrypts secrets files for simple CD
 - [Trivy](https://github.com/aquasecurity/trivy)
@@ -37,7 +41,7 @@ Depending on the state of the repository, there are different steps you must fol
 - The infrastructure was already running but you need to restart the runner
     - Make sure you run `git pull origin` before decrypting and restarting the compose again
         - While the runner updates services in place, it does not update the original code that was cloned
-        - Meaning if you want to run the latest version, you need to pull again
+			- Meaning if you want to run the latest version, you need to pull again
 - You have all the secrets made you just need to run the infrastructure on a new server
     - Follow the steps in [Setup/On The Server](SETUP.md#on-the-server)
 - You lost the `age` key or are starting from scratch with the repo
@@ -56,22 +60,32 @@ SOPS was chosen as the secret management tool for this project for a couple reas
 
 Essentially, we use a key to encrypt secrets and keep them directly in the repository. Secrets are then decrypted at deploy time, making repositories completely blind to the encryption process, keeping the code simple.
 
-## Next Features
+## Next (Possible) Features
 
-- Some wiki or docs platform
-    - Should include both public & private pages
-    - Should be available for all officers and committees
-    - Maybe docusaurus?
 - Backup program
     - Since we have SOPS, we can make encrypted backups to any provider
         - GCP buckets are like $6 a TB so probably only pennies for us
     - This is essential for resiliency
+    - Probably use terraform
 - Pin image versions and set up alerting system
     - To prevent unforseen breakages, pin the image version
     - Will need some alert system for upgrading when vulnerabilities are found
 - Self-repairing infrastructure
     - Create intelligent CI workflows to deploy only the service that got updated
     - Run specific tests for the containers including vuln scanning before deployment
+- Health checks and rollback
+    - Include automatic health checks (maybe with a script on the runner)
+    - Add a rollback when health check fails
+- Rollback system
+    - Some system to manually rollback changes to a specific previous version
+- Container scanning
+    - Probably using a script in runner, scan a particular image and report on it
+    - Maybe do as a separate job so it shows as a separate check?
+- Self hosted GitLabs mirror
+    - Open source fallback in case github implodes
+    - Mirror our repos and essential dependencies
+- Prevent mass search scan attacks
+    - fail2ban or nginx rate limiting
 - Cloudflare [Terraform](https://github.com/hashicorp/terraform) management
     - [`cloudflared`](https://github.com/cloudflare/cloudflared)?
 

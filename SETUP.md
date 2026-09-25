@@ -89,38 +89,63 @@ docker run --rm --entrypoint htpasswd httpd:2 -Bbn myuser mypassword > secrets/r
 - `origin.key` is the rsa key used for tls handshakes from cloudflare
 - Both must be obtained and originate from our cloudflare
 
+### PostgreSQL
+
+`postgres/.env`
+
+```ini
+# Fill
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+
+# As-Is
+POSTGRES_DB=postgres
+```
+
+### VaultWarden
+
+All of the necessary settings should be configured using the admin interface.
+
+> This probably should be changed to be tracked via a [.env file](https://github.com/dani-garcia/vaultwarden/wiki/Configuration-overview) when we get a chance.
+
+### Dex
+
+// TODO
+
+### Outline
+
+// TODO
+
 ### SOPS and age
 
-# FIXME
-
-- Compile or download the SOPS binary by following the instructions on the GitHub.
-- Install `age` from your package manager
-- Place `age.key` in `sops/` and extract `age.pub` (the text after `# public key: `)
+`sops/age.key` and `sops/age.pub`
 
 ```bash
-age-keygen -o key.txt
-export SOPS_AGE_KEY_FILE=./key.txt
-alias sops-age="sops --age $(grep "public key" key.txt | cut -d: -f2 | tr -d ' ')"
-sops-age -e secrets.yaml > secrets.enc.yaml
+apt install age
+age-keygen -o age.key
+age-keygen -y age.key > age.pub
 ```
+
+> [!IMPORTANT] These files reside in the sops directory, outside of the secrets folder.
 
 ### Infrastructure, CyberHam, and cybr.club
 
-- Encrypt the secrets
-- Use the convenient script `scripts/encrypt.sh <dir>` where dir is the root of the repo you want to encrypt the secrets for
-- Check the output for correctness with `scripts/decrypt.sh <dir>`
-    - You probably want to move your secrets folder to secrets.bak before this (don't forget to delete it before committing anything!)
-- Don't forget to `chmod +x scripts/encrypt.sh scripts/decrypt.sh`
+Encrypt their secrets to secrets.enc using `scripts/encrypt.sh`.
 
 ## On the Server
 
-There are only two things you need to do actually connected to the server outside of the promised `git clone` and `docker compose up`.
+There are only two things you need to do actually connected to the server outside of the basic startup commands.
 
-## Docker
+### Docker
 
-- Install docker on the server
+Install docker on the server using [their guides](https://docs.docker.com/engine/install/).
 
-## SCP
+> Be sure to `sudo usermod -aG docker $USER` and re-login to grant non-root docker perms.
 
-- Place age key on server
-- Precisely at `Infrastructure/sops/age.key`
+### SCP
+
+Place the age key on server so you can decrypt secrets:
+
+```bash
+scp /path/to/age.key user@ip_address:/path/to/Infrastructure/sops/age.key
+```
