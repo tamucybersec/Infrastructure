@@ -132,7 +132,7 @@ services:
       - infra
     depends_on:
       registry:
-        condition: service_healthy
+        condition: service_started
       terraform:
         condition: service_completed_successfully
 
