@@ -112,7 +112,7 @@ services:
   terraform:
     build:
       context: terraform
-    image: terraform:local
+    image: terraform:${TF_IMAGE_TAG:-local}
     container_name: terraform
     restart: "no"
     env_file:

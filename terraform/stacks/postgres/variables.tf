@@ -17,8 +17,6 @@ variable "pg_password" {
   sensitive = true
 }
 
-# One role + one database per service, keyed by service name.
-# Populated from <SERVICE>_POSTGRES_{USER,PASSWORD,DB} by env.sh.
 variable "databases" {
   type = map(object({
     user     = string

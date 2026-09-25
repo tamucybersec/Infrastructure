@@ -8,9 +8,5 @@ terraform {
     }
   }
 
-  # State lives in the base postgres database (one schema per stack) and
-  # contains secrets. entrypoint.sh supplies the connection via PG_CONN_STR /
-  # PGPASSWORD and schema_name via -backend-config. The postgres server is
-  # created by compose, not by this stack, so the backend is not circular.
   backend "pg" {}
 }

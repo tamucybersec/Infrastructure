@@ -89,6 +89,9 @@ Essentially, we use a key to encrypt secrets and keep them directly in the repos
 - Config for VaultWarden
     - We're currently using the vaultwarden config from a long time ago
     - IaC it and update any variables we may need (like using the postgres database!)
+- Save terraform plans
+	- Terraform will one day shoot us in the foot
+	- Save the plan somewhere and require up to date PRs so it doesn't
 - Cloudflare [Terraform](https://github.com/hashicorp/terraform) management
     - [`cloudflared`](https://github.com/cloudflare/cloudflared)?
 
