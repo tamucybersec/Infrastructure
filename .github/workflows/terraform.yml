@@ -1,0 +1,63 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: terraform-plan-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    runs-on: self-hosted
+    env:
+      TF_CI_CONTEXT: ${{ github.workspace }}/terraform
+      COMPOSE: -f docker-compose.yml -f ${{ github.workspace }}/terraform/docker-compose.ci.yml
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: scripts/compose.sh $COMPOSE build terraform
+
+      - name: Format check
+        run: |
+          scripts/compose.sh $COMPOSE run --rm -T --no-deps \
+            --entrypoint terraform terraform fmt -check -recursive -diff /work/stacks
+
+      - name: Plan change
+        id: plan
+        run: |
+          set +e
+          scripts/compose.sh $COMPOSE run --rm -T --no-deps \
+            -e TF_MODE=plan terraform 2>&1 | tee "$RUNNER_TEMP/plan.txt"
+          rc=${PIPESTATUS[0]}
+          exit "$rc"
+        shell: bash
+
+      - name: Comment plan
+        if: always() && steps.plan.conclusion != 'skipped'
+        uses: actions/github-script@v7
+        env:
+          PLAN_OUTCOME: ${{ steps.plan.outcome }}
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- terraform-plan -->';
+            let out = '';
+            try { out = fs.readFileSync(`${process.env.RUNNER_TEMP}/plan.txt`, 'utf8'); } catch {}
+            if (out.length > 60000) out = '... (truncated)\n' + out.slice(-60000);
+            const ok = process.env.PLAN_OUTCOME === 'success';
+            const body = `${marker}\n### Terraform plan: ${ok ? 'succeeded' : 'FAILED'}\n` +
+              `Commit ${context.sha.slice(0, 7)}, planned against live state (no lock, nothing applied).\n\n` +
+              '```\n' + out + '\n```';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const prev = comments.find(c => c.body && c.body.startsWith(marker));
+            if (prev) await github.rest.issues.updateComment({ owner, repo, comment_id: prev.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });

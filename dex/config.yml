@@ -1,9 +1,15 @@
 issuer: https://auth.cybr.club/dex
 
 storage:
-  type: sqlite3
+  type: postgres
   config:
-    file: /data/dex.db
+    host: postgres
+    port: 5432
+    user: $POSTGRES_USER
+    password: $POSTGRES_PASSWORD
+    database: $POSTGRES_DB
+    ssl:
+      mode: disable
 
 web:
   http: 0.0.0.0:5556

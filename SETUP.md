@@ -102,6 +102,10 @@ POSTGRES_PASSWORD=
 POSTGRES_DB=postgres
 ```
 
+### Redis
+
+// TODO
+
 ### VaultWarden
 
 All of the necessary settings should be configured using the admin interface.
@@ -113,6 +117,10 @@ All of the necessary settings should be configured using the admin interface.
 // TODO
 
 ### Outline
+
+// TODO
+
+### Terraform
 
 // TODO
 

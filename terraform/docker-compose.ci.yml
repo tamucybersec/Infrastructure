@@ -1,0 +1,8 @@
+# Override used by .github/workflows/terraform.yml: builds the PR's terraform
+# code under a separate tag so the live terraform:local image is untouched.
+
+services:
+  terraform:
+    build:
+      context: ${TF_CI_CONTEXT:?set by the workflow}
+    image: terraform:ci
