@@ -11,6 +11,7 @@ volumes:
   db_data:
   dex_data:
   terraform_state:
+  terraform_plans:
   decrypted_secrets:
     name: decrypted_secrets
 
@@ -123,6 +124,7 @@ services:
       - secrets/vaultwarden/db.env
     volumes:
       - terraform_state:/state
+      - terraform_plans:/plans
     networks:
       - infra
     depends_on:
