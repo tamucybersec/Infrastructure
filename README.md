@@ -12,27 +12,31 @@ scripts/compose.sh up
 
 ## Overview
 
-- [Runner](https://github.com/myoung34/docker-github-actions-runner)
-    - GitHub Actions runner (containerized) for CI/CD
-- [Registry](https://github.com/distribution/distribution)
-    - Hosts the containers from CI builds for CD
-- [nginx](https://github.com/nginx/nginx)
-    - A reverse proxy for routing requests to services
-- [PostgreSQL](https://github.com/postgres/postgres)
-    - Powerful FOSS relational database
-- [VaultWarden](https://github.com/dani-garcia/vaultwarden)
-    - Hosts passwords for simple secret sharing among the team
-- [Outline](https://github.com/outline/outline)
-    - Collaborative wiki documentation hub
 - [Dex](https://github.com/dexidp/dex)
     - Simple OIDC auth platform
+- [nginx](https://github.com/nginx/nginx)
+    - A reverse proxy for routing requests to services
+- [Outline](https://github.com/outline/outline)
+    - Collaborative wiki documentation hub
+- [PostgreSQL](https://github.com/postgres/postgres)
+    - Powerful relational database
+- [Redis](https://github.com/redis/redis)
+    - Fast caching engine
+- [Registry](https://github.com/distribution/distribution)
+    - Hosts the containers from CI builds for CD
+- [Runner](https://github.com/myoung34/docker-github-actions-runner)
+    - GitHub Actions runner (containerized) for CI/CD
+    - [Infrastructure](https://github.com/tamucybersec/Infrastructure), [CyberHam](https://github.com/tamucybersec/CyberHam), and [cybr.club](https://github.com/tamucybersec/cybr.club)
+        - Repos managed and deployed by the runner
+        - See respective repos for their CI/CD scripts
 - [SOPS](https://github.com/getsops/sops) with [age](https://github.com/FiloSottile/age)
     - Encrypts / decrypts secrets files for simple CD
+- [Terraform](https://github.com/hashicorp/terraform)
+    - IaC for non-config driven systems
 - [Trivy](https://github.com/aquasecurity/trivy)
     - Scans containers for vulnerabilities
-- [Infrastructure](https://github.com/tamucybersec/Infrastructure), [CyberHam](https://github.com/tamucybersec/CyberHam), and [cybr.club](https://github.com/tamucybersec/cybr.club)
-    - Repos managed and deployed by the runner
-    - See respective repos for their CI/CD scripts
+- [VaultWarden](https://github.com/dani-garcia/vaultwarden)
+    - Hosts passwords for simple secret sharing among the team
 
 ## Setup
 
@@ -90,8 +94,8 @@ Essentially, we use a key to encrypt secrets and keep them directly in the repos
     - We're currently using the vaultwarden config from a long time ago
     - IaC it and update any variables we may need (like using the postgres database!)
 - Save terraform plans
-	- Terraform will one day shoot us in the foot
-	- Save the plan somewhere and require up to date PRs so it doesn't
+    - Terraform will one day shoot us in the foot
+    - Save the plan somewhere and require up to date PRs so it doesn't
 - Cloudflare [Terraform](https://github.com/hashicorp/terraform) management
     - [`cloudflared`](https://github.com/cloudflare/cloudflared)?
 
