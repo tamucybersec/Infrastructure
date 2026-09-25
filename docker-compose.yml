@@ -10,10 +10,90 @@ volumes:
   vaultwarden_data:
   db_data:
   dex_data:
+  terraform_state:
   decrypted_secrets:
     name: decrypted_secrets
 
 services:
+  dex:
+    image: dexidp/dex:latest
+    container_name: dex
+    restart: unless-stopped
+    env_file:
+      - secrets/dex/db.env
+      - secrets/dex/.env
+    volumes:
+      - dex_data:/data
+      - ./dex/config.yml:/etc/dex/config.yml:ro
+    networks:
+      - infra
+    command: ["dex", "serve", "/etc/dex/config.yml"]
+    depends_on:
+      terraform:
+        condition: service_completed_successfully
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/confs:/etc/nginx/sites-enabled:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - ./secrets/nginx:/etc/ssl/cybr.club:ro
+    networks:
+      - infra
+
+  outline:
+    image: outlinewiki/outline:latest
+    container_name: outline
+    restart: unless-stopped
+    env_file:
+      - secrets/redis/.env
+      - secrets/outline/db.env
+      - secrets/outline/.env
+    networks:
+      - infra
+    depends_on:
+      terraform:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: unless-stopped
+    env_file:
+      - secrets/postgres/.env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - infra
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8
+    container_name: redis
+    restart: unless-stopped
+    env_file:
+      - secrets/redis/.env
+    networks:
+      - infra
+    command: sh -c 'redis-server --requirepass "$$REDIS_PASSWORD"'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   registry:
     image: registry:2
     container_name: registry
@@ -33,86 +113,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/confs:/etc/nginx/sites-enabled:ro
-      - ./nginx/snippets:/etc/nginx/snippets:ro
-      - ./secrets/nginx:/etc/ssl/cybr.club:ro
-    networks:
-      - infra
-
-  postgres:
-    image: postgres:17
-    container_name: postgres
-    restart: unless-stopped
-    env_file:
-      - secrets/postgres/.env
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    networks:
-      - infra
-    healthcheck:
-      test: ["CMD", "pg_isready", "-d", "outline", "-U", "user"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  redis:
-    image: redis:8
-    container_name: redis
-    restart: unless-stopped
-    env_file:
-      - secrets/redis/.env
-    networks:
-      - infra
-    command: sh -c 'redis-server --requirepass "$$REDIS_PASSWORD"'
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 30s
-      retries: 3
-
-  dex:
-    image: dexidp/dex:latest
-    container_name: dex
-    restart: unless-stopped
-    env_file:
-      - secrets/dex/.env
-    volumes:
-      - dex_data:/data
-      - ./dex/config.yml:/etc/dex/config.yml:ro
-    networks:
-      - infra
-    command: ["dex", "serve", "/etc/dex/config.yml"]
-
-  vaultwarden:
-    image: vaultwarden/server:latest
-    container_name: vaultwarden
-    restart: unless-stopped
-    volumes:
-      - vaultwarden_data:/data
-    networks:
-      - infra
-
-  outline:
-    image: outlinewiki/outline:latest
-    container_name: outline
-    restart: unless-stopped
-    env_file:
-      - secrets/outline/.env
-    networks:
-      - infra
-    depends_on:
-      - postgres
-      - redis
 
   runner:
     build:
@@ -137,5 +137,41 @@ services:
     networks:
       - infra
     depends_on:
-      - registry
-      - postgres
+      registry:
+        condition: service_healthy
+      terraform:
+        condition: service_completed_successfully
+
+  terraform:
+    build:
+      context: terraform
+    image: terraform:${TF_IMAGE_TAG:-local}
+    container_name: terraform
+    restart: "no"
+    env_file:
+      - secrets/postgres/.env
+      - secrets/cyberham/db.env
+      - secrets/dex/db.env
+      - secrets/outline/db.env
+      - secrets/vaultwarden/db.env
+    volumes:
+      - terraform_state:/state
+    networks:
+      - infra
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    env_file:
+      - secrets/vaultwarden/db.env
+    volumes:
+      - vaultwarden_data:/data
+    networks:
+      - infra
+    depends_on:
+      terraform:
+        condition: service_completed_successfully

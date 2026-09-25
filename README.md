@@ -25,7 +25,7 @@ scripts/compose.sh up
 - [Outline](https://github.com/outline/outline)
     - Collaborative wiki documentation hub
 - [Dex](https://github.com/dexidp/dex)
-	- Simple OIDC auth platform
+    - Simple OIDC auth platform
 - [SOPS](https://github.com/getsops/sops) with [age](https://github.com/FiloSottile/age)
     - Encrypts / decrypts secrets files for simple CD
 - [Trivy](https://github.com/aquasecurity/trivy)
@@ -41,7 +41,7 @@ Depending on the state of the repository, there are different steps you must fol
 - The infrastructure was already running but you need to restart the runner
     - Make sure you run `git pull origin` before decrypting and restarting the compose again
         - While the runner updates services in place, it does not update the original code that was cloned
-			- Meaning if you want to run the latest version, you need to pull again
+            - Meaning if you want to run the latest version, you need to pull again
 - You have all the secrets made you just need to run the infrastructure on a new server
     - Follow the steps in [Setup/On The Server](SETUP.md#on-the-server)
 - You lost the `age` key or are starting from scratch with the repo
@@ -86,6 +86,12 @@ Essentially, we use a key to encrypt secrets and keep them directly in the repos
     - Mirror our repos and essential dependencies
 - Prevent mass search scan attacks
     - fail2ban or nginx rate limiting
+- Config for VaultWarden
+    - We're currently using the vaultwarden config from a long time ago
+    - IaC it and update any variables we may need (like using the postgres database!)
+- Save terraform plans
+	- Terraform will one day shoot us in the foot
+	- Save the plan somewhere and require up to date PRs so it doesn't
 - Cloudflare [Terraform](https://github.com/hashicorp/terraform) management
     - [`cloudflared`](https://github.com/cloudflare/cloudflared)?
 
