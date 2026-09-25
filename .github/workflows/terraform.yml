@@ -21,6 +21,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Decrypt secrets
+        run: decrypt
+
       - name: Build image
         run: scripts/compose.sh $COMPOSE build terraform
 
