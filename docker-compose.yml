@@ -15,53 +15,22 @@ volumes:
     name: decrypted_secrets
 
 services:
-  runner:
-    build:
-      context: runner
-    image: runner:local
-    container_name: github-runner
+  dex:
+    image: dexidp/dex:latest
+    container_name: dex
     restart: unless-stopped
     env_file:
-      - secrets/runner/.env
-    environment:
-      - INFRA_DIR=${INFRA_DIR:?run compose.sh, not compose directly}
-      - SOPS_DIR=${SOPS_DIR:?run compose.sh, not compose directly}
-    security_opt:
-      - label=disable
+      - secrets/dex/db.env
+      - secrets/dex/.env
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp/runner:/tmp/runner
-      - runner_data:/runner/data
-      - ./secrets/runner/config.json:/runner/data/.docker/config.json:ro
-      - decrypted_secrets:/decrypted_secrets
-      - ${INFRA_DIR}:${INFRA_DIR}
+      - dex_data:/data
+      - ./dex/config.yml:/etc/dex/config.yml:ro
     networks:
       - infra
+    command: ["dex", "serve", "/etc/dex/config.yml"]
     depends_on:
-      registry:
-        condition: service_healthy
       terraform:
         condition: service_completed_successfully
-
-  registry:
-    image: registry:2
-    container_name: registry
-    restart: unless-stopped
-    env_file:
-      - secrets/registry/.env
-    ports:
-      - 127.0.0.1:5000:5000
-    volumes:
-      - registry_data:/var/lib/registry
-      - ./secrets/registry/.htpasswd:/auth/htpasswd:ro
-    networks:
-      - infra
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/v2/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
 
   nginx:
     image: nginx:latest
@@ -77,6 +46,22 @@ services:
       - ./secrets/nginx:/etc/ssl/cybr.club:ro
     networks:
       - infra
+
+  outline:
+    image: outlinewiki/outline:latest
+    container_name: outline
+    restart: unless-stopped
+    env_file:
+      - secrets/redis/.env
+      - secrets/outline/db.env
+      - secrets/outline/.env
+    networks:
+      - infra
+    depends_on:
+      terraform:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
 
   postgres:
     image: postgres:17
@@ -108,6 +93,54 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: unless-stopped
+    env_file:
+      - secrets/registry/.env
+    ports:
+      - 127.0.0.1:5000:5000
+    volumes:
+      - registry_data:/var/lib/registry
+      - ./secrets/registry/.htpasswd:/auth/htpasswd:ro
+    networks:
+      - infra
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/v2/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  runner:
+    build:
+      context: runner
+    image: runner:local
+    container_name: github-runner
+    restart: unless-stopped
+    env_file:
+      - secrets/runner/.env
+    environment:
+      - INFRA_DIR=${INFRA_DIR:?run compose.sh, not compose directly}
+      - SOPS_DIR=${SOPS_DIR:?run compose.sh, not compose directly}
+    security_opt:
+      - label=disable
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/runner:/tmp/runner
+      - runner_data:/runner/data
+      - ./secrets/runner/config.json:/runner/data/.docker/config.json:ro
+      - decrypted_secrets:/decrypted_secrets
+      - ${INFRA_DIR}:${INFRA_DIR}
+    networks:
+      - infra
+    depends_on:
+      registry:
+        condition: service_healthy
+      terraform:
+        condition: service_completed_successfully
 
   terraform:
     build:
@@ -142,33 +175,3 @@ services:
     depends_on:
       terraform:
         condition: service_completed_successfully
-
-  outline:
-    image: outlinewiki/outline:latest
-    container_name: outline
-    restart: unless-stopped
-    env_file:
-      - secrets/redis/.env
-      - secrets/outline/db.env
-      - secrets/outline/.env
-    networks:
-      - infra
-    depends_on:
-      terraform:
-        condition: service_completed_successfully
-      redis:
-        condition: service_healthy
-
-  dex:
-    image: dexidp/dex:latest
-    container_name: dex
-    restart: unless-stopped
-    env_file:
-      - secrets/dex/db.env
-      - secrets/dex/.env
-    volumes:
-      - dex_data:/data
-      - ./dex/config.yml:/etc/dex/config.yml:ro
-    networks:
-      - infra
-    command: ["dex", "serve", "/etc/dex/config.yml"]
