@@ -77,6 +77,10 @@ DATABASE_URL=postgres://${OUTLINE_POSTGRES_USER}:${OUTLINE_POSTGRES_PASSWORD}@po
 PGSSLMODE=disable
 REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
 
+FILE_STORAGE=local
+FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
+FILE_STORAGE_UPLOAD_MAX_SIZE=262144000
+
 OIDC_CLIENT_ID=outline
 OIDC_AUTH_URI=<auth public address>/dex/auth
 OIDC_TOKEN_URI=<container network address>/dex/token

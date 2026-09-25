@@ -5,14 +5,15 @@ networks:
     name: infra
 
 volumes:
-  runner_data:
-  registry_data:
-  vaultwarden_data:
   db_data:
   dex_data:
-  terraform_state:
   decrypted_secrets:
     name: decrypted_secrets
+  outline_data:
+  registry_data:
+  runner_data:
+  terraform_state:
+  vaultwarden_data:
 
 services:
   dex:
@@ -55,6 +56,8 @@ services:
       - secrets/redis/.env
       - secrets/outline/db.env
       - secrets/outline/.env
+    volumes:
+      - outline_data:/var/lib/outline/data
     networks:
       - infra
     depends_on:
