@@ -1,0 +1,19 @@
+# Copy to nginx/confs/analytics.cybr.club.conf after confirming DNS and TLS.
+server {
+  include snippets/tls.conf;
+  include snippets/docker_resolver.conf;
+  server_name analytics.cybr.club;
+
+  location / {
+    set $upstream goatcounter;
+    proxy_pass http://$upstream:8080;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    # Uses the direct peer unless nginx's trusted real-IP handling is configured.
+    # Configure that for the deployment's proxy/Cloudflare topology first;
+    # never trust arbitrary client-supplied forwarding headers.
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Real-IP $remote_addr;
+    access_log off;
+  }
+}

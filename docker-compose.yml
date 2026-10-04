@@ -5,6 +5,8 @@ networks:
     name: infra
 
 volumes:
+  goatcounter_data:
+  goatcounter_backups:
   db_data:
   dex_data:
   decrypted_secrets:
@@ -16,6 +18,33 @@ volumes:
   vaultwarden_data:
 
 services:
+  goatcounter:
+    image: arp242/goatcounter:2.7.0
+    restart: unless-stopped
+    command:
+      [serve, -listen=:8080, -tls=http, -automigrate, -db=sqlite+/home/goatcounter/goatcounter-data/db.sqlite3]
+    networks:
+      - infra
+    volumes:
+      - goatcounter_data:/home/goatcounter/goatcounter-data
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    stop_grace_period: 30s
+
+  goatcounter-backup:
+    image: python:3.12-alpine
+    restart: unless-stopped
+    command: [python, /backup.py]
+    network_mode: none
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    volumes:
+      - goatcounter_data:/data:ro
+      - goatcounter_backups:/backups
+      - ./goatcounter/backup.py:/backup.py:ro
+    tmpfs: [/tmp]
+
   dex:
     image: dexidp/dex:latest
     container_name: dex

@@ -38,6 +38,10 @@ scripts/compose.sh up
 - [VaultWarden](https://github.com/dani-garcia/vaultwarden)
     - Hosts passwords for simple secret sharing among the team
 
+## Website analytics
+
+GoatCounter hosting, initialization, proxy configuration, and backup/recovery procedures are documented in [goatcounter/README.md](goatcounter/README.md).
+
 ## Setup
 
 Depending on the state of the repository, there are different steps you must follow:

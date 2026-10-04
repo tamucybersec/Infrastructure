@@ -4,3 +4,7 @@ sops/age.key
 
 .terraform/
 *.tfstate*
+
+# Local GoatCounter backup exports and Python test caches
+analytics-backups/
+__pycache__/
