@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cyberham
+  namespace: cyberham
+spec:
+  replicas: 1
+  # Discord gateway connection + SQLite on a RWO volume: never two at once
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cyberham
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cyberham
+    spec:
+      containers:
+        - name: cyberham
+          image: ghcr.io/tamucybersec/cyberham:latest
+          imagePullPolicy: Always
+          env:
+            # cyberham/__init__.py picks config.<CYBERHAM_ENV>.toml
+            - name: CYBERHAM_ENV
+              value: prod
+          ports:
+            - name: http
+              containerPort: 5183
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 45
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          volumeMounts:
+            # config.toml, config.prod.toml, google client json, seed token.json
+            - name: secrets
+              mountPath: /app/secrets
+              readOnly: true
+            # SQLite database, live token.json, logs
+            - name: data
+              mountPath: /app/data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: secrets
+          secret:
+            secretName: cyberham-secrets
+        - name: data
+          persistentVolumeClaim:
+            claimName: cyberham-data

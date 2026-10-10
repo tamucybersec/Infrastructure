@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cyberham
+  namespace: cyberham
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: cyberham
+  ports:
+    - name: http
+      port: 5183
+      targetPort: http

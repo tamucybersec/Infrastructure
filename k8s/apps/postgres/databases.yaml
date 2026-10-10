@@ -1,0 +1,36 @@
+# cyberham is intentionally absent: it uses SQLite in its own PVC.
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: dex
+  namespace: postgres
+spec:
+  ensure: present
+  name: dex
+  owner: dex
+  cluster:
+    name: postgres-cluster
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: outline
+  namespace: postgres
+spec:
+  ensure: present
+  name: outline
+  owner: outline
+  cluster:
+    name: postgres-cluster
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: vaultwarden
+  namespace: postgres
+spec:
+  ensure: present
+  name: vaultwarden
+  owner: vaultwarden
+  cluster:
+    name: postgres-cluster
