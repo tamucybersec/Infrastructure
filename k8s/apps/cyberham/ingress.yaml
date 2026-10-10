@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cyberham
+  namespace: cyberham
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: api.cybr.club
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cyberham
+                port:
+                  name: http

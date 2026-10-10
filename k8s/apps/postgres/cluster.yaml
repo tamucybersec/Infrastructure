@@ -1,0 +1,39 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-cluster
+  namespace: postgres
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17
+  storage:
+    size: 20Gi
+    storageClass: local-path
+  # neutral bootstrap; real databases come from the Database CRs
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+  managed:
+    roles:
+      - name: dex
+        ensure: present
+        login: true
+        passwordSecret:
+          name: dex-db-credentials
+      - name: outline
+        ensure: present
+        login: true
+        passwordSecret:
+          name: outline-db-credentials
+      - name: vaultwarden
+        ensure: present
+        login: true
+        passwordSecret:
+          name: vaultwarden-db-credentials
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      memory: 2Gi

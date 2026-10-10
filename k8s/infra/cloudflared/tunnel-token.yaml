@@ -1,0 +1,9 @@
+# once sops needs to be tunnel-token.sops.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tunnel-token
+  namespace: cloudflared
+type: Opaque
+stringData:
+  token: "<CLOUDFLARE_TUNNEL_TOKEN>"

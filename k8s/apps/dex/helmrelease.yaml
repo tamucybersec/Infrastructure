@@ -1,0 +1,75 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: dex-release
+  namespace: dex
+spec:
+  chart:
+    spec:
+      chart: dex
+      sourceRef:
+        kind: HelmRepository
+        name: dex-helmrepo
+      version: 0.25.2
+  interval: 1m0s
+  values:
+    # chart fullname defaults to the release name (dex-release); pin it so the
+    # Service is dex.dex.svc.cluster.local, which outline's OIDC URIs expect
+    fullnameOverride: dex
+
+    ingress:
+      enabled: true
+      className: traefik
+      hosts:
+        - host: auth.cybr.club
+          paths:
+            - path: /
+              pathType: Prefix
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+
+    envFrom:
+      - secretRef:
+          name: dex-secrets
+
+    config:
+      issuer: https://auth.cybr.club/dex
+      storage:
+        type: postgres
+        config:
+          host: postgres-cluster-rw.postgres.svc.cluster.local
+          port: 5432
+          user: $POSTGRES_USER
+          password: $POSTGRES_PASSWORD
+          database: $POSTGRES_DB
+          ssl:
+            mode: disable
+
+      web:
+        http: 0.0.0.0:5556
+
+      connectors:
+        - type: github
+          id: github
+          name: GitHub
+          config:
+            clientID: $GITHUB_CLIENT_ID
+            clientSecret: $GITHUB_CLIENT_SECRET
+            redirectURI: https://auth.cybr.club/dex/callback
+            orgs:
+              - name: tamucybersec
+            loadAllGroups: false
+            teamNameField: slug
+            useLoginAsID: false
+
+      staticClients:
+        - id: outline
+          name: Outline
+          secretEnv: OUTLINE_CLIENT_SECRET
+          redirectURIs:
+            - https://wiki.cybr.club/auth/oidc.callback
